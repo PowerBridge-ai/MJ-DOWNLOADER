@@ -1,0 +1,42 @@
+import discord
+import asyncio
+import io
+import os
+
+# Replace YOUR_DISCORD_TOKEN with your bot token
+bot = discord.Client()
+
+# Set the channel ID where the Midjourney images are posted
+channel_id = 1234567890
+
+# Create a directory to save the downloaded images
+output_dir = "midjourney_images"
+
+# Define a function to download an image from a Discord message
+async def download_image(message):
+    attachment = message.attachments[0]
+    image_bytes = await attachment.read()
+    image = io.BytesIO(image_bytes)
+
+    # Save the image to the output directory
+    filename = f"{output_dir}/{message.id}.png"
+    with open(filename, "wb") as f:
+        f.write(image.getvalue())
+
+# Start the bot
+@bot.event
+async def on_ready():
+    print("Logged in as {} ({})".format(bot.user.name, bot.user.id))
+
+# Listen for messages in the channel where the Midjourney images are posted
+@bot.event
+async def on_message(message):
+    if message.channel.id == channel_id:
+        # Check if the message contains an image
+        if len(message.attachments) > 0:
+            # Check if the image is a Midjourney upscale
+            if message.content.startswith("**Upscaled:**"):
+                await download_image(message)
+
+# Run the bot
+bot.run("YOUR_DISCORD_TOKEN")
